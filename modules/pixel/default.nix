@@ -78,7 +78,8 @@ mkMerge [
     # Exclude all devices by default
     source.excludeGroups = mkDefault (lib.attrNames deviceMap ++ lib.mapAttrsToList (name: device: device.family) deviceMap ++ [ "slider" ]);
     # But include names related to our device
-    source.includeGroups = mkDefault [ config.device config.deviceFamily ];
+    source.includeGroups = mkDefault ([ config.device config.deviceFamily  ]
+                                        ++ lib.optional (config.deviceFamily == "raviole") "slider");
 
     signing.avb.enable = mkDefault true;
   })
