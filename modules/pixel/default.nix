@@ -39,8 +39,13 @@ let
     cheetah = { family = "pantah"; name = "Pixel 7 Pro"; };
   };
 
+
+
   adevtoolStateFileMap = {
-    oriole = ./adevtool/oriole.json;
+    oriole = pkgs.fetchurl {
+                url  = "https://raw.githubusercontent.com/GrapheneOS/vendor_state/13/oriole.json";
+                sha1 = "105j7mzwq7ybgrfh762lhyzvzr4g3kvzm766r28n35c36ksmg4ny";
+             };
   };
 
   # Make a uuid based on some string data

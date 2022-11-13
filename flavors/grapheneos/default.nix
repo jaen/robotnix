@@ -32,7 +32,7 @@ in mkIf (config.flavor == "grapheneos") (mkMerge [
   adevtool.stateFile = "${config.source.dirs."vendor/state".src}/${config.device}.json";
   apv.buildID = mkDefault (
     if (elem config.device [ "coral" "flame" ]) then "TP1A.221005.002"
-    else if (elem config.device [ "panther" "cheetah" ]) then "TD1A.221105.003"
+    else if (elem config.device [ "panther" "cheetah" ]) then "TD1A.221105.001"
     else "TP1A.221105.002"
   );
 
@@ -63,6 +63,7 @@ in mkIf (config.flavor == "grapheneos") (mkMerge [
   source.dirs."kernel/google/sunfish".enable = false;
   source.dirs."kernel/google/redbull".enable = false;
   source.dirs."kernel/google/barbet".enable = false;
+  source.dirs."kernel/google/raviole".enable = false;
 
   kernel.enable = false; #mkDefault (elem config.deviceFamily phoneDeviceFamilies);
 
