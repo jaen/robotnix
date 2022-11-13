@@ -1,6 +1,6 @@
-From b84a5d87c343e44222f0d38edcb3b87aca1b3d08 Mon Sep 17 00:00:00 2001
-From: Your Name <you@example.com>
-Date: Tue, 23 Aug 2022 18:51:42 +0200
+From 3c5df4a679663126f7b42b61616e9e7e80c18514 Mon Sep 17 00:00:00 2001
+From: Daniel Fullmer <danielrf12@gmail.com>
+Date: Sun, 17 May 2020 00:42:48 -0400
 Subject: [PATCH] Readonly source fix
 
 Have CopyFile just always set u+w on copied files. Fixes a bunch of
@@ -8,16 +8,16 @@ issues that would be too difficult to track down otherwise. HACK
 
 Change-Id: Ic905ab7c3c41f013fc70c92b375f5dc41d5cf586
 ---
- core/Makefile            | 3 +++
+ core/Makefile            | 4 ++++
  core/definitions.mk      | 4 ++++
  tools/libhost/CopyFile.c | 4 ++--
- 3 files changed, 9 insertions(+), 2 deletions(-)
+ 3 files changed, 10 insertions(+), 2 deletions(-)
 
 diff --git a/core/Makefile b/core/Makefile
-index 5dc836a51..5ae75972d 100644
+index 17065746a..210a86a44 100644
 --- a/core/Makefile
 +++ b/core/Makefile
-@@ -1191,6 +1191,7 @@ INSTALLED_BOOTIMAGE_TARGET := $(PRODUCT_OUT)/boot.img
+@@ -1192,6 +1192,7 @@ INSTALLED_BOOTIMAGE_TARGET := $(PRODUCT_OUT)/boot.img
  ifeq ($(BOARD_AVB_ENABLE),true)
  $(INSTALLED_BOOTIMAGE_TARGET): $(INTERNAL_PREBUILT_BOOTIMAGE) $(AVBTOOL) $(BOARD_AVB_BOOT_KEY_PATH)
  	cp $(INTERNAL_PREBUILT_BOOTIMAGE) $@
@@ -25,7 +25,7 @@ index 5dc836a51..5ae75972d 100644
  	$(AVBTOOL) add_hash_footer \
  	    --image $@ \
  	    $(call get-partition-size-argument,$(BOARD_BOOTIMAGE_PARTITION_SIZE)) \
-@@ -3898,6 +3899,7 @@ INSTALLED_DTBOIMAGE_TARGET := $(PRODUCT_OUT)/dtbo.img
+@@ -3960,6 +3961,7 @@ INSTALLED_DTBOIMAGE_TARGET := $(PRODUCT_OUT)/dtbo.img
  ifeq ($(BOARD_AVB_ENABLE),true)
  $(INSTALLED_DTBOIMAGE_TARGET): $(BOARD_PREBUILT_DTBOIMAGE) $(AVBTOOL) $(BOARD_AVB_DTBO_KEY_PATH)
  	cp $(BOARD_PREBUILT_DTBOIMAGE) $@
@@ -33,7 +33,7 @@ index 5dc836a51..5ae75972d 100644
  	$(AVBTOOL) add_hash_footer \
  	    --image $@ \
  	    $(call get-partition-size-argument,$(BOARD_DTBOIMG_PARTITION_SIZE)) \
-@@ -3911,6 +3913,7 @@ UNMOUNTED_NOTICE_DEPS += $(INSTALLED_DTBOIMAGE_TARGET)
+@@ -3973,6 +3975,7 @@ UNMOUNTED_NOTICE_DEPS += $(INSTALLED_DTBOIMAGE_TARGET)
  else
  $(INSTALLED_DTBOIMAGE_TARGET): $(BOARD_PREBUILT_DTBOIMAGE)
  	cp $(BOARD_PREBUILT_DTBOIMAGE) $@
@@ -41,6 +41,14 @@ index 5dc836a51..5ae75972d 100644
  endif
  
  endif # BOARD_PREBUILT_DTBOIMAGE
+@@ -3994,6 +3997,7 @@ endif
+ ifeq ($(BOARD_AVB_ENABLE),true)
+ $(INSTALLED_PVMFWIMAGE_TARGET): $(PREBUILT_PVMFWIMAGE_TARGET) $(AVBTOOL) $(BOARD_AVB_PVMFW_KEY_PATH)
+ 	cp $< $@
++	chmod u+w $@
+ 	$(AVBTOOL) add_hash_footer \
+ 	    --image $@ \
+ 	    $(call get-partition-size-argument,$(BOARD_PVMFWIMAGE_PARTITION_SIZE)) \
 diff --git a/core/definitions.mk b/core/definitions.mk
 index 0c46de9fc..008b9af08 100644
 --- a/core/definitions.mk
@@ -94,5 +102,5 @@ index f9bda86fd..44b36e4bd 100644
  #ifndef _WIN32
          /*
 -- 
-2.37.1
+2.38.1
 
