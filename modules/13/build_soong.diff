@@ -1,0 +1,12 @@
+diff --git a/filesystem/bootimg.go b/filesystem/bootimg.go
+index 33beb37bf..3e2f3a030 100644
+--- a/filesystem/bootimg.go
++++ b/filesystem/bootimg.go
+@@ -219,6 +219,7 @@ func (b *bootimg) signImage(ctx android.ModuleContext, unsignedImage android.Out
+ 	output := android.PathForModuleOut(ctx, b.installFileName()).OutputPath
+ 	builder := android.NewRuleBuilder(pctx, ctx)
+ 	builder.Command().Text("cp").Input(unsignedImage).Output(output)
++	builder.Command().Text("chmod").Text("u+w").Output(output)
+ 	builder.Command().BuiltTool("verity_utils").
+ 		Input(propFile).
+ 		Implicits(toolDeps).

@@ -11,6 +11,9 @@ mkIf (config.androidVersion == 13) {
     ./build_make/0001-Readonly-source-fix.patch
     #./build_make/0003-Add-option-to-include-prebuilt-images-when-signing-t.patch # Moved temporarily to modules/pixel/driver-binaries.nix
   ];
+  source.dirs."build/soong".patches = [
+    ./build_soong.diff
+  ];
 
   #kernel.clangVersion = mkDefault "r370808";
 }
