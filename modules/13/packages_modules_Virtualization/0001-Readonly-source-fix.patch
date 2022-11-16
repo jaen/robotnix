@@ -1,0 +1,52 @@
+diff --git a/microdroid/Android.bp b/microdroid/Android.bp
+index 3be7eaad..92544915 100644
+--- a/microdroid/Android.bp
++++ b/microdroid/Android.bp
+@@ -410,6 +410,7 @@ genrule {
+     ],
+     out: ["microdroid_bootconfig.normal"],
+     cmd: "cp $(location bootconfig.normal) $(out) && " +
++        "chmod u+w $(out) && " +
+         "$(location avbtool) add_hash_footer " +
+         "--algorithm SHA256_RSA4096 " +
+         "--partition_name bootconfig " +
+@@ -427,6 +428,7 @@ genrule {
+     ],
+     out: ["microdroid_bootconfig.app_debuggable"],
+     cmd: "cp $(location bootconfig.app_debuggable) $(out) && " +
++        "chmod u+w $(out) && " +
+         "$(location avbtool) add_hash_footer " +
+         "--algorithm SHA256_RSA4096 " +
+         "--partition_name bootconfig " +
+@@ -444,6 +446,7 @@ genrule {
+     ],
+     out: ["microdroid_bootconfig.full_debuggable"],
+     cmd: "cp $(location bootconfig.full_debuggable) $(out) && " +
++        "chmod u+w $(out) && " +
+         "$(location avbtool) add_hash_footer " +
+         "--algorithm SHA256_RSA4096 " +
+         "--partition_name bootconfig " +
+@@ -489,6 +492,7 @@ genrule {
+     // rounded up to 4KB boundary.
+     cmd: "cp $(location :microdroid_bootloader_pubkey_replaced) $(out) && " +
+         "if [ $$(stat --format=%s $(out)) -gt 4096 ]; then " +
++        "chmod u+w $(out) && " +
+         "$(location avbtool) add_hash_footer " +
+         "--algorithm SHA256_RSA4096 " +
+         "--partition_name bootloader " +
+@@ -513,6 +517,7 @@ genrule {
+     // bootloader file whose size is 1. (replace_bytes fails if key not found)
+     // 3. Replace embedded pubkey with new one.
+     cmd: "cp $(location :microdroid_crosvm_bootloader) $(out) && " +
++        "chmod u+w $(out) && " +
+         "if [ $$(stat --format=%s $(out)) -gt 4096 ]; then " +
+         "$(location replace_bytes) $(out) " +
+         "$(location :microdroid_crosvm_bootloader.avbpubkey) " +
+@@ -556,6 +561,7 @@ genrule {
+     ],
+     out: ["output.img"],
+     cmd: "$(location mkenvimage_slim) -output_path $(out) -input_path $(location uboot-env.txt) && " +
++        "chmod u+w $(out) && " +
+         "$(location avbtool) add_hash_footer " +
+         "--algorithm SHA256_RSA4096 " +
+         "--partition_name uboot_env " +
