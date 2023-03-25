@@ -36,7 +36,7 @@ in mkIf (config.flavor == "waydroid")
   # ModuleNotFoundError: No module named 'mako'
   # TODO: mkBefore here is a hack
   envPackages = with pkgs; mkBefore [
-    (python2.withPackages (p: with p; [ Mako ]))
+    # (python2.withPackages (p: with p; [ Mako ]))
     (python3.withPackages (p: with p; [ Mako ]))
   ];
 

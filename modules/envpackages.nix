@@ -14,7 +14,7 @@ in
       bc
       git
       gnumake
-      jre8_headless
+      jdk11
       lsof
       m4
       ncurses5
@@ -28,8 +28,17 @@ in
       # Things not in build/soong/ui/build/paths/config.go
       nettools # Needed for "hostname" in build/soong/ui/build/sandbox_linux.go
       procps # Needed for "ps" in build/envsetup.sh
+      # glibc
+      # glibc.dev.dev.dev
+      # stdenv.cc.cc
     ]
-    (mkIf (config.androidVersion >= 10) [
+    (mkIf (config.androidVersion >= 12) [
+      freetype # Needed by jdk9 prebuilt
+      fontconfig
+
+      python3
+    ])
+    (mkIf ((config.androidVersion >= 10) && (config.androidVersion <= 11)) [
       freetype # Needed by jdk9 prebuilt
       fontconfig
 
@@ -44,7 +53,7 @@ in
       curl
       flex
       gcc
-      gitRepo
+      git-repo
       gnupg
       gperf
       imagemagick
@@ -52,7 +61,7 @@ in
       lzip
       lzop
       perl
-      python2
+      # python2
       schedtool
       util-linux
       which
