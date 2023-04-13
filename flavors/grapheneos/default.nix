@@ -160,4 +160,20 @@ mkIf (config.flavor == "grapheneos") (mkMerge [
     # Leave the existing auditor in the build--just in case the user wants to
     # audit devices running the official upstream build
   }
+  (mkIf config.cts-profile-fix.enable {
+    # see: https://protonaosp.org/developers/details/safetynet
+    source.dirs."frameworks/base".patches = [
+      ./01-spoof-build-fingerprint.patch
+      (pkgs.fetchpatch {
+        name = "02-block-safetynet-key-attestation.patch";
+        sha256 = "sha256-zWnOaspSwV/+zge07j04Kw89LFkdWwbuv+cUsl6a/MY=";
+        url = "https://github.com/ProtonAOSP/android_frameworks_base/commit/13dc7d28c12d.patch";
+      })
+      (pkgs.fetchpatch {
+        name = "03-alter-model-name-to-avoid-hw-attestation.patch";
+        sha256 = "sha256-lvKpyPzfHoIGRVlW4yUsiUXc87B7z3UjlKxXPYUhvjw=";
+        url = "https://github.com/ProtonAOSP/android_frameworks_base/commit/a99ac1b48a9b.patch";
+      })
+    ];
+  })
 ])
