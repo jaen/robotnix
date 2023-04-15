@@ -66,7 +66,7 @@
             inherit device;
             flavor = "grapheneos";
             apv.enable = false;
-            adevtool.hash = "sha256-aA54o2FPfI+9iDLiUaGJAqMzUuNyWwCuWOoa1lADKuM=";
+            adevtool.hash = "sha256-0vSHJbpFoBxXdtBPHRSEzdndbu9vjN+imTVAP9eKkGU=";
             cts-profile-fix.enable = true;
             signing = {
               enable = true;
