@@ -68,7 +68,7 @@ let
   '';
   imgScript = { targetFiles, out }: ''img_from_target_files ${targetFiles} ${out}'';
   factoryImgScript = { targetFiles, img, out }: ''
-    ln -s ${targetFiles} ${config.device}-target_files-${config.buildNumber}.zip
+    ln -s ${targetFiles} ${config.device}-target_files-${config.buildNumber}.zip || true
     ${pkgs.coreutils}/bin/cp -rL --copy-contents ${img} ${config.device}-img-${config.buildNumber}.zip || true
 
     export DEVICE=${config.device}
