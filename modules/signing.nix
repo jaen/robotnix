@@ -358,6 +358,7 @@ in
     '';
 
     build.signing.withKeys = keysDir: script: ''
+      set -x
       export KEYSDIR=${keysDir}
       if [[ "$KEYSDIR" ]]; then
         if [[ ! -d "$KEYSDIR" ]]; then
@@ -372,7 +373,7 @@ in
         export SOPS_AGE_KEY_FILE=${lib.optionalString (config.signing.sopsDecrypt.enable && config.signing.sopsDecrypt.keyType == "age") config.signing.sopsDecrypt.key};
         export SOPS_PGP_FP=${lib.optionalString (config.signing.sopsDecrypt.enable && config.signing.sopsDecrypt.keyType == "pgp") config.signing.sopsDecrypt.key};
         export GNUPGHOME=${lib.optionalString (config.signing.sopsDecrypt.enable && config.signing.sopsDecrypt.keyType == "pgp" && builtins.hasAttr "gpgHome" config.signing.sopsDecrypt) (builtins.getAttr "gpgHome" config.signing.sopsDecrypt)};
-        if [ -n $GNUPGHOME ]; then export HOME=$(dirname $GNUPGHOME); fi
+        if [ ! -z "$GNUPGHOME" ]; then export HOME=$(dirname $GNUPGHOME); fi
 
         (cd $KEYSDIR
         set -x
