@@ -10,7 +10,7 @@ let
   upstreamParams = import ./upstream-params.nix;
   grapheneOSRelease = "${config.apv.buildID}.${upstreamParams.buildNumber}";
 
-  phoneDeviceFamilies = [ "crosshatch" "bonito" "coral" "sunfish" "redfin" "barbet" "bluejay" "pantah" ];
+  phoneDeviceFamilies = [ "crosshatch" "bonito" "coral" "sunfish" "redfin" "barbet" "raviole" "bluejay" "pantah" ];
   supportedDeviceFamilies = phoneDeviceFamilies ++ [ "generic" ];
   kernelPrefix = if config.androidVersion >= 13 then "kernel/android" else "kernel/google";
 
