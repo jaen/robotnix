@@ -8,7 +8,11 @@ in
       enable = mkEnableOption "apply ProtonAOSP patches to make Safetynet CTS Profile pass";
     };
   };
+  
   config = mkIf config.cts-profile-fix.enable {
+    source.dirs."build/make".patches = [
+      ./add-stock-fingerprint-property.patch
+    ];
     source.dirs."system/core".patches = [
       (pkgs.fetchpatch {
         name = "init-set-properties-for-safety-net.patch";
