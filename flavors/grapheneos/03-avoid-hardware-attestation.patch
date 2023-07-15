@@ -1,0 +1,31 @@
+From a99ac1b48a9b392ff0df013a3a3bc1dceda85bf5 Mon Sep 17 00:00:00 2001
+From: Danny Lin <danny@kdrag0n.dev>
+Date: Mon, 11 Oct 2021 20:01:05 -0700
+Subject: [PATCH] Alter model name to avoid SafetyNet HW attestation
+ enforcement
+
+As of September 2, Google is enforcing SafetyNet's previously
+opportunistic hardware-backed attestation based on device information.
+Append a space to the device model name in order to avoid such
+enforcement.
+
+Change-Id: Ib7779e0aae40cab3730a56785e9231896917ab0a
+---
+ core/java/com/android/internal/gmscompat/AttestationHooks.java | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/core/java/com/android/internal/gmscompat/AttestationHooks.java b/core/java/com/android/internal/gmscompat/AttestationHooks.java
+index 94b829fbd706..0182c87f0121 100644
+--- a/core/java/com/android/internal/gmscompat/AttestationHooks.java
++++ b/core/java/com/android/internal/gmscompat/AttestationHooks.java
+@@ -56,6 +56,9 @@ private static void spoofBuildGms() {
+         if (PRODUCT_STOCK_FINGERPRINT.length() > 0) {
+             setBuildField("FINGERPRINT", PRODUCT_STOCK_FINGERPRINT);
+         }
++
++        // Alter model name to avoid hardware attestation enforcement
++        setBuildField("MODEL", Build.MODEL + " ");
+     }
+ 
+     public static void initApplicationBeforeOnCreate(Application app) {
+

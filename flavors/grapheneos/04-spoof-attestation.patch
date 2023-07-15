@@ -1,0 +1,144 @@
+diff --git a/core/java/android/app/Instrumentation.java b/core/java/android/app/Instrumentation.java
+index 53a4ff7a51f6..46acfacbac54 100644
+--- a/core/java/android/app/Instrumentation.java
++++ b/core/java/android/app/Instrumentation.java
+@@ -1244,10 +1244,10 @@ public class Instrumentation {
+             throws InstantiationException, IllegalAccessException, 
+             ClassNotFoundException {
+         GmsCompat.maybeEnable(context);
++        AttestationHooks.initApplicationBeforeOnCreate(context);
+         Application app = getFactory(context.getPackageName())
+                 .instantiateApplication(cl, className);
+         app.attach(context);
+-        AttestationHooks.initApplicationBeforeOnCreate(app);
+         return app;
+     }
+     
+diff --git a/core/java/com/android/internal/gmscompat/AttestationHooks.java b/core/java/com/android/internal/gmscompat/AttestationHooks.java
+index f1e6890d5837..0c596b75f2e3 100644
+--- a/core/java/com/android/internal/gmscompat/AttestationHooks.java
++++ b/core/java/com/android/internal/gmscompat/AttestationHooks.java
+@@ -17,6 +17,8 @@
+ package com.android.internal.gmscompat;
+ 
+ import android.app.Application;
++import android.content.Context;
++import android.content.pm.ApplicationInfo;
+ import android.os.Build;
+ import android.os.SystemProperties;
+ import android.util.Log;
+@@ -28,23 +30,27 @@ import java.util.Arrays;
+ public final class AttestationHooks {
+     private static final String TAG = "GmsCompat/Attestation";
+ 
++    private static final String GOOGLE_WALLET_PACKAGE = "com.google.android.apps.walletnfcrel";
++
+     private static final String PRODUCT_STOCK_FINGERPRINT =
+-            SystemProperties.get("ro.build.stock_fingerprint");
++        SystemProperties.get("ro.build.stock_fingerprint");
+ 
+     private static volatile boolean sIsGms = false;
++    private static volatile boolean sIsPlayStore = false;
+ 
+     private AttestationHooks() { }
+ 
+     private static void setBuildField(String key, String value) {
++        if (value.isEmpty()) {
++            return;
++        }
++        
+         try {
+-            // Unlock
+             Field field = Build.class.getDeclaredField(key);
+             field.setAccessible(true);
+ 
+-            // Edit
+             field.set(null, value);
+ 
+-            // Lock
+             field.setAccessible(false);
+         } catch (NoSuchFieldException | IllegalAccessException e) {
+             Log.e(TAG, "Failed to spoof Build." + key, e);
+@@ -52,30 +58,59 @@ public final class AttestationHooks {
+     }
+ 
+     private static void spoofBuildGms() {
+-        // Set fingerprint for SafetyNet CTS profile
+-        if (PRODUCT_STOCK_FINGERPRINT.length() > 0) {
+-            setBuildField("FINGERPRINT", PRODUCT_STOCK_FINGERPRINT);
+-        }
++        Log.d(TAG, "Current values"
++          + " product = " + Build.PRODUCT
++          + ", device = " + Build.DEVICE
++          + ", model = " + Build.MODEL
++          + ", fingerprint = " + Build.FINGERPRINT
++        );
+ 
+-        // Alter model name to avoid hardware attestation enforcement
+-        setBuildField("MODEL", Build.MODEL + " ");
++        setBuildField("FINGERPRINT", PRODUCT_STOCK_FINGERPRINT);
++
++        Log.d(TAG, "Spoofed values"
++          + " product = " + Build.PRODUCT
++          + ", device = " + Build.DEVICE
++          + ", model = " + Build.MODEL
++          + ", fingerprint = " + Build.FINGERPRINT
++        );
+     }
+ 
+-    public static void initApplicationBeforeOnCreate(Application app) {
+-        if (GmsInfo.PACKAGE_GMS_CORE.equals(app.getPackageName())) {
++    public static void initApplicationBeforeOnCreate(Context context) {
++        ApplicationInfo appInfo = context.getApplicationInfo();
++        String packageName = appInfo.packageName;
++
++        if (GmsInfo.PACKAGE_GMS_CORE_UNSTABLE.equals(packageName)
++            || GmsInfo.PACKAGE_GMS_CORE.equals(packageName)
++        ) {
+             sIsGms = true;
++        }
++
++        if (GmsInfo.PACKAGE_PLAY_STORE.equals(packageName)) {
++            sIsPlayStore = true;
++        }
++
++        if (sIsGms || sIsPlayStore) {
++            Log.d(TAG, "Spoofing build properties for app " + packageName
++                + " isGms = " + sIsGms
++                + " isPlayStore = " + sIsPlayStore
++            );
++
+             spoofBuildGms();
+         }
++        else {
++            Log.d(TAG, "Not spoofing build properties for app " + packageName);
++        }
+     }
+ 
+     private static boolean isCallerSafetyNet() {
+         return Arrays.stream(Thread.currentThread().getStackTrace())
+-                .anyMatch(elem -> elem.getClassName().contains("DroidGuard"));
++                .anyMatch(elem -> elem.getClassName().toLowerCase().contains("droidguard"));
+     }
+ 
+     public static void onEngineGetCertificateChain() {
+-        // Check stack for SafetyNet
+-        if (sIsGms && isCallerSafetyNet()) {
++        if (sIsGms && isCallerSafetyNet() || sIsPlayStore) {
++            Log.d(TAG, "Blocking keystore hardware certificate retrieval");
++
+             throw new UnsupportedOperationException();
+         }
+     }
+diff --git a/core/java/com/android/internal/gmscompat/GmsInfo.java b/core/java/com/android/internal/gmscompat/GmsInfo.java
+index b5006cf8eb79..349bb7554247 100644
+--- a/core/java/com/android/internal/gmscompat/GmsInfo.java
++++ b/core/java/com/android/internal/gmscompat/GmsInfo.java
+@@ -21,6 +21,7 @@ public final class GmsInfo {
+     // Package names for GMS apps
+     public static final String PACKAGE_GSF = "com.google.android.gsf"; // "Google Services Framework"
+     public static final String PACKAGE_GMS_CORE = "com.google.android.gms"; // "Play services"
++    public static final String PACKAGE_GMS_CORE_UNSTABLE = "com.google.android.gms.unstable"; // "Play services"
+     public static final String PACKAGE_PLAY_STORE = "com.android.vending";
+ 
+     // "Google" app. "GSA" (G Search App) is its internal name

@@ -167,11 +167,8 @@ mkIf (config.flavor == "grapheneos") (mkMerge [
     source.dirs."frameworks/base".patches = [
       ./01-spoof-build-fingerprint.patch
       ./02-block-safetynet-key-attestation.patch
-      (pkgs.fetchpatch {
-        name = "03-alter-model-name-to-avoid-hw-attestation.patch";
-        sha256 = "sha256-lvKpyPzfHoIGRVlW4yUsiUXc87B7z3UjlKxXPYUhvjw=";
-        url = "https://github.com/ProtonAOSP/android_frameworks_base/commit/a99ac1b48a9b.patch";
-      })
+      ./03-avoid-hardware-attestation.patch
+      ./04-spoof-attestation.patch
     ];
   })
 ])
