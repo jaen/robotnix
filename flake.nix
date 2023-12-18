@@ -56,15 +56,19 @@
           PYTHONPATH = ./scripts;
         };
       } // (pkgs.lib.mapAttrs
-        (device: robotnixSystem: robotnixSystem.config.build.debugShell)
+        (_: robotnixSystem: robotnixSystem.config.build.debugShell)
         robotnixConfigurations);
         
-      robotnixConfigurations = (pkgs.lib.listToAttrs (map
+      robotnixConfigurations = {
+        lineageos = (pkgs.lib.listToAttrs (map
         (device: {
           name = device;
           value = lib.robotnixSystem {
             inherit device;
-            flavor = "grapheneos";
+            
+            flavor = "lineageos";
+            androidVersion = 13;
+
             apv.enable = false;
             # adevtool.hash = "sha256-NwUeDYmo3Kh8LKt9pZylzpI2yb5YDKWLo+ZiavrmDmw="; 
             adevtool.hash = "sha256-FZ5MAr9xlhwwT6OIZKAgC82sLn/Mcn/RHwZmiU37jxc="; 
@@ -81,6 +85,33 @@
             #   };
             # };
           };
-        }) [ "redfin" "bramble" "oriole" "raven" "bluejay" "panther" "cheetah" ]));
+        }) [ "lemonade" ]));
+
+        grapheneos = (pkgs.lib.listToAttrs (map
+        (device: {
+          name = device;
+          value = lib.robotnixSystem {
+            inherit device;
+
+            flavor = "grapheneos";
+
+            androidVersion = 13;
+
+            apv.enable = false;
+            adevtool.hash = "sha256-NwUeDYmo3Kh8LKt9pZylzpI2yb5YDKWLo+ZiavrmDmw=";
+
+            signing = {
+              enable = true;
+              keyStorePath = ./test-keys;
+              sopsDecrypt = {
+                enable = true;
+                sopsConfig = ./.sops.yaml;
+                key = ./.keystore-private-keys.txt;
+                keyType = "age";
+              };
+            };
+          };
+        }) [ "redfin" "oriole" "panther" ])); 
+      };
     };
 }

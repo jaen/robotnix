@@ -197,18 +197,23 @@ let
       in mkIf (mountPoints != [])
         ((lib.concatMapStringsSep "\n" (mountPoint: "mkdir -p ${mountPoint}") mountPoints) + "\n");
 
-      unpackScript = (lib.optionalString config.enable ''
-        mkdir -p ${config.relpath}
-        ${pkgs.util-linux}/bin/mount --bind ${config.src} ${config.relpath}
-      '')
-      + (lib.concatMapStringsSep "\n" (c: ''
-        mkdir -p $(dirname ${c.dest})
-        cp --reflink=auto -f ${config.relpath}/${c.src} ${c.dest}
-      '') config.copyfiles)
-      + (lib.concatMapStringsSep "\n" (c: ''
-        mkdir -p $(dirname ${c.dest})
-        ln -sf --relative ${config.relpath}/${c.src} ${c.dest}
-      '') config.linkfiles);
+      unpackScript = let
+        scriptText = ''
+            mkdir -p ${config.relpath}
+            ${pkgs.util-linux}/bin/mount --bind ${config.src} ${config.relpath}
+          ''
+          + (lib.concatMapStringsSep "\n" (c: ''
+              mkdir -p $(dirname ${c.dest})
+              cp --reflink=auto -f ${config.relpath}/${c.src} ${c.dest}
+            '') config.copyfiles
+            )
+          + (lib.concatMapStringsSep "\n" (c: ''
+              mkdir -p $(dirname ${c.dest})
+              ln -sf --relative ${config.relpath}/${c.src} ${c.dest}
+            '') config.linkfiles
+            );
+        in
+          lib.optionalString config.enable scriptText;
     };
   });
 in
