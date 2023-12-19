@@ -52,7 +52,7 @@ in
   };
 
   config = mkMerge ((lib.flatten (map
-    ({ name, displayName, buildSeparately ? false, chromeModernIsBundled ? true, isTriChrome ? (config.androidVersion >= 10), triChromeBundled ? false }:
+    ({ name, displayName, buildSeparately ? false, chromeModernIsBundled ? true, isTriChrome ? (config.androidVersion >= 10), triChromeBundled ? true }:
       let
         # There is a lot of shared code between chrome app and chrome webview. So we
         # default to building them in a single derivation. This is not optimal if

@@ -377,7 +377,10 @@ in
               exit_code=''${PIPESTATUS[0]}
 
               # the android 13 build doesn't seem to set this var
-              if [[ -z $ANDROID_PRODUCT_OUT ]]; then ANDROID_PRODUCT_OUT=$(get_build_var PRODUCT_OUT); fi
+              if [[ -z "$ANDROID_PRODUCT_OUT" ]]; then
+                ANDROID_PRODUCT_OUT="$(get_build_var PRODUCT_OUT)"
+              fi
+
               echo $ANDROID_PRODUCT_OUT > ANDROID_PRODUCT_OUT
 
               exit $exit_code
@@ -478,7 +481,7 @@ in
 
         moduleInfo = mkAndroid {
           name = "robotnix-module-info-${config.device}-${config.buildNumber}.json";
-          # Can't use absolute path from $ANDROID_PRODUCT_OUT here since make needs a relative path
+          # Can't use absolute path from $ here since make needs a relative path
           makeTargets = [ "$(get_build_var PRODUCT_OUT)/module-info.json" ];
           installPhase = ''
             cp $ANDROID_PRODUCT_OUT/module-info.json $out

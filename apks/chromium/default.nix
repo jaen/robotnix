@@ -41,7 +41,7 @@
 , packageName ? "org.chromium.chrome"
 , webviewPackageName ? "com.android.webview"
 , trichromeLibraryPackageName ? "org.chromium.trichromelibrary"
-, version ? "100.0.4896.127"
+, version ? "113.0.5672.77"
 , versionCode ? null
 # Potential buildTargets:
 # chrome_modern_public_bundle + system_webview_apk
@@ -120,6 +120,11 @@ let
     # so trick it by giving it the store path of clang rather than the in-tree path
     clang_base_path = "${deps."src/third_party/llvm-build/Release+Asserts"}";
     use_qt = false;
+    # TODO: is it necessary? For 113.0 this at least seems to be unsupported:
+    # Did you mean "use_system_libpng"?
+    #
+    # The variable "use_system_libffi" was set as a build argument
+    # but never appeared in a declare_args() block in any buildfile.
     use_system_libffi = true;
 
     # explicit host_cpu and target_cpu prevent "nix-shell pkgsi686Linux.chromium-git" from building x86_64 version
@@ -183,8 +188,11 @@ let
         echo '#define SKIA_COMMIT_HASH "${deps."src/third_party/skia".rev}-"'       >> $out/src/skia/ext/skia_commit_hash.h
         echo '#endif  // SKIA_EXT_SKIA_COMMIT_HASH_H_'                              >> $out/src/skia/ext/skia_commit_hash.h
 
-        echo -n '${deps."src/third_party/dawn".rev}'                                 > $out/src/gpu/webgpu/DAWN_VERSION
-        echo '1677777777'                                                            > $out/src/gpu/webgpu/DAWN_VERSION.committime
+        # Older chromium versions might not have support for webgpu, causing file creation to fail
+        if [ -d "$out/src/gpu/webgpu" ]; then
+          echo -n '${deps."src/third_party/dawn".rev}'                               > $out/src/gpu/webgpu/DAWN_VERSION
+          echo '1677777777'                                                          > $out/src/gpu/webgpu/DAWN_VERSION.committime
+        fi
       '');
 
   # Use the prebuilt one from CIPD
@@ -269,7 +277,11 @@ in stdenv.mkDerivation rec {
           --replace "/usr/bin/env -S make -f" "/usr/bin/make -f"
       fi
       chmod -x third_party/webgpu-cts/src/tools/run_deno
-      chmod -x third_party/dawn/third_party/webgpu-cts/tools/run_deno
+      
+      if [ -f "third_party/dawn/third_party/webgpu-cts/tools/run_deno" ]; then
+        chmod -x third_party/dawn/third_party/webgpu-cts/tools/run_deno
+      fi
+
       # We want to be able to specify where the sandbox is via CHROME_DEVEL_SANDBOX
       substituteInPlace sandbox/linux/suid/client/setuid_sandbox_host.cc \
         --replace \
