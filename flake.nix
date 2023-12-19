@@ -70,8 +70,8 @@
             flavor = "lineageos";
             androidVersion = 13;
 
-            apv.enable = false;
-            adevtool.hash = "sha256-NwUeDYmo3Kh8LKt9pZylzpI2yb5YDKWLo+ZiavrmDmw=";
+            # apv.enable = false;
+            # adevtool.hash = "sha256-NwUeDYmo3Kh8LKt9pZylzpI2yb5YDKWLo+ZiavrmDmw=";
 
             signing = {
               enable = true;
