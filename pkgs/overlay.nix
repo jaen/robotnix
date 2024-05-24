@@ -1,3 +1,9 @@
+{ inputs }:
+let
+  inherit (inputs) nixpkgs-unstable;
+
+  unstablePkgs = nixpkgs-unstable.legacyPackages.x86_64-linux;
+in
 self: super: {
   android-emulator = super.callPackage ./android-emulator {};
 
@@ -32,6 +38,8 @@ self: super: {
     impureEnvVars = old.impureEnvVars or [ ] ++ [ "ROBOTNIX_GIT_MIRRORS" ];
   });
   nix-prefetch-git = super.callPackage ./fetchgit/nix-prefetch-git.nix {};
+
+  gitRepo = unstablePkgs.gitRepo;
 
   ###
 

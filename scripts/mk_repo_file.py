@@ -21,6 +21,7 @@ from robotnix_common import save, checkout_git, ls_remote, get_mirrored_url, che
 
 REPO_FLAGS = [
     "--quiet",
+    # Based on v2.45, matching the one overlayed in pkgs
     "--repo-url=https://github.com/jaen/tools_repo",
     "--repo-rev=dca531f6d6e9fdcf00aa9d18f0153bd66a2e32ea",
     "--no-repo-verify",

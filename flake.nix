@@ -3,10 +3,11 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     androidPkgs.url = "github:tadfisher/android-nixpkgs/stable";
   };
 
-  outputs = { self, nixpkgs, androidPkgs, ... }@inputs: let
+  outputs = { self, nixpkgs, nixpkgs-unstable, androidPkgs,  ... }@inputs: let
     pkgs = import ./pkgs/default.nix { inherit inputs; };
   in {
     # robotnixSystem evaluates a robotnix configuration
