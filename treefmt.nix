@@ -10,7 +10,10 @@
     mypy.directories = {
       "." = {
         # Fot whatever reason `excludes` doesn't work
-        options = [ "--exclude" "apks/chromium" ];
+        options = [
+          "--exclude"
+          "apks/chromium"
+        ];
         extraPythonPackages = [ pkgs.python3.pkgs.pytest ];
       };
     };
