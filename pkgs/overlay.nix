@@ -1,4 +1,9 @@
 { inputs }:
+let
+  inherit (inputs) nixpkgs-unstable;
+
+  unstablePkgs = nixpkgs-unstable.legacyPackages.x86_64-linux;
+in
 self: super: {
   android-emulator = super.callPackage ./android-emulator {};
 
@@ -35,6 +40,8 @@ self: super: {
   nix-prefetch-git = super.callPackage ./fetchgit/nix-prefetch-git.nix {};
 
   gitRepo = super.callPackage ./gitRepo { inherit inputs; };
+
+  nixfmt-rfc-style = unstablePkgs.nixfmt-rfc-style;
 
   ###
 
