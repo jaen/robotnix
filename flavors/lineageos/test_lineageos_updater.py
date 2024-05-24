@@ -3,6 +3,8 @@
 
 from unittest.mock import patch
 from typing import Any
+import subprocess
+import textwrap
 
 import update_device_metadata
 import update_device_dirs
@@ -10,20 +12,27 @@ import update_device_dirs
 
 def test_fetch_metadata(tmp_path: Any) -> None:
     lineage_build_targets = tmp_path / "lineage-build-targets"
-    lineage_build_targets.write_text(
-        '''# Ignore comments
+    lineage_build_targets.write_text(textwrap.dedent('''
+        # Ignore comments
         crosshatch userdebug lineage-18.1 W
-        ''')
+    '''))
 
     devices_json = tmp_path / "devices.json"
-    devices_json.write_text(
-        '''[
-        {  "model": "crosshatch", "oem": "Google", "name": "Pixel 3 XL", "lineage_recovery": true}
+    devices_json.write_text(textwrap.dedent('''
+        [
+            {  "model": "crosshatch", "oem": "Google", "name": "Pixel 3 XL", "lineage_recovery": true}
         ]
-        ''')
+    '''))
+
+    # nix-prefetch-git that is used underneath seems to require a real git repo
+    subprocess.check_output(["git", "init", "--initial-branch=main"], cwd=tmp_path)
+    subprocess.check_output(["git", "add", "-A"], cwd=tmp_path)
+    subprocess.check_output(["git", "commit", "-am", "Initial commit"], cwd=tmp_path)
 
     metadata = update_device_metadata.fetch_metadata(
-            f"file://{lineage_build_targets}", f"file://{devices_json}"
+        f"file://{tmp_path}",
+        "lineage-build-targets",
+        "devices.json"
     )
 
     assert metadata == {
@@ -133,6 +142,8 @@ def test_fetch_vendor_dirs(ls_remote: Any, checkout_git: Any, tmpdir: Any) -> No
             "vendor": "google"
         },
     }
-    dirs = update_device_dirs.fetch_vendor_dirs(metadata, baseurl, 'lineage-18.1')
+    dirs = update_device_dirs.fetch_vendor_dirs(
+        metadata, baseurl, 'lineage-18.1', 'lineage-18.1', {}
+    )
 
     assert 'vendor/google' in dirs

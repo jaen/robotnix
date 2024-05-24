@@ -31,10 +31,10 @@ def save(filename: str, data: Any) -> None:
 
 def get_store_path(path):
     """Get actual path to a Nix store path; supports handling local remotes"""
-    prefix = os.getenv('NIX_REMOTE');
+    prefix = os.getenv('NIX_REMOTE')
     if prefix and not prefix.startswith('/'):
         raise Exception('Must be run on a local Nix store.')
-    return f"{prefix}/{path}"
+    return os.path.join(*filter(None, [prefix, path]))
 
 class GitCheckoutInfoDict(TypedDict):
     """Container for output from nix-prefetch-git"""
