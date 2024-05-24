@@ -5,10 +5,22 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     androidPkgs.url = "github:tadfisher/android-nixpkgs/stable";
+    treefmt-nix.url = "github:numtide/treefmt-nix";
+    treefmt-nix.inputs.nixpkgs.follows = "nixpkgs-unstable";
   };
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, androidPkgs,  ... }@inputs: let
+  outputs = { self, nixpkgs, nixpkgs-unstable, androidPkgs, treefmt-nix, ... }@inputs: let
     pkgs = import ./pkgs/default.nix { inherit inputs; };
+    unstablePkgs = nixpkgs-unstable.legacyPackages.x86_64-linux;
+    
+    treeFmt = treefmt-nix.lib.evalModule unstablePkgs ./treefmt.nix;
+    pythonForUpdaterScripts = pkgs.python3.withPackages (
+      p: with p; [
+        mypy
+        flake8
+        pytest
+      ]
+    );
   in {
     # robotnixSystem evaluates a robotnix configuration
     lib.robotnixSystem = configuration: import ./default.nix {
@@ -30,8 +42,7 @@
     devShell.x86_64-linux = pkgs.mkShell {
       name = "robotnix-scripts";
       nativeBuildInputs = with pkgs; [
-        # For android updater scripts
-        (python3.withPackages (p: with p; [ mypy flake8 pytest ]))
+        pythonForUpdaterScripts
         gitRepo nix-prefetch-git
         curl pup jq
         shellcheck
@@ -42,8 +53,16 @@
         cipd git
 
         cachix
+
+        treeFmt.config.build.wrapper
       ];
       PYTHONPATH=./scripts;
+    };
+
+    formatter.x86_64-linux = treeFmt.config.build.wrapper;
+
+    checks.x86_64-linux = {
+      formatting = treeFmt.config.build.check self;
     };
   };
 }
