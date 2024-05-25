@@ -6,7 +6,7 @@
 { config, pkgs, lib, ... }:
 
 let
-  inherit (lib) mkIf mkOption mkOptionDefault mkMerge mkEnableOption types;
+  inherit (lib) mkIf mkOption mkOptionDefault mkMerge mkEnableOption types mkDefault;
 
   cfg = config.kernel;
 in
@@ -33,7 +33,7 @@ in
       };
 
       patches = mkOption {
-        default = [];
+        default = [ ];
         type = types.listOf types.path;
         description = "List of patches to apply to kernel source";
       };
