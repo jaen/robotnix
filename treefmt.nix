@@ -1,4 +1,9 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 {
   # Additional options
   options = {
@@ -30,12 +35,20 @@
       nixpkgs-fmt.package = pkgs.nixfmt-rfc-style;
 
       mypy.enable = true;
-      mypy.package = pkgs.python3.withPackages(ps: with ps; [ mypy pytest ]);
+      mypy.package = pkgs.python3.withPackages (
+        ps: with ps; [
+          mypy
+          pytest
+        ]
+      );
       mypy.directories = {
         "." = {
           # Fot whatever reason using `settings.formatter.mypy.excludes` does not work properly
-          options = lib.cli.toGNUCommandLine {} {
-            exclude = [ "apks/chromium" "result" ];
+          options = lib.cli.toGNUCommandLine { } {
+            exclude = [
+              "apks/chromium"
+              "result"
+            ];
           };
           # Has to be set again, because treefmt clears PYTHONPATH and running via `treefmt` fails, see:
           # https://github.com/numtide/treefmt-nix/blob/main/programs/mypy.nix#L67
@@ -102,13 +115,16 @@
         # This is here to shut all the "no formatter for path" for excluded files up
         # See: https://github.com/numtide/treefmt/issues/317
         # It's go-version-specific, but it doesn't hurt to leave it in
-        dummy = let 
-          allExcludes = config.settings.excludes
-            ++ lib.concatMap (f: f.excludes) (builtins.attrValues config.settings.formatter);
-        in {
-          command = "true";
-          includes = lib.unique allExcludes;
-        };
+        dummy =
+          let
+            allExcludes =
+              config.settings.excludes
+              ++ lib.concatMap (f: f.excludes) (builtins.attrValues config.settings.formatter);
+          in
+          {
+            command = "true";
+            includes = lib.unique allExcludes;
+          };
       };
     };
   };
