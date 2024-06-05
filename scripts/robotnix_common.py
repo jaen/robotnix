@@ -7,6 +7,7 @@ import json
 import os
 import subprocess
 import sys
+from pathlib import Path
 
 
 ROBOTNIX_GIT_MIRRORS = os.environ.get('ROBOTNIX_GIT_MIRRORS', '')
@@ -31,19 +32,24 @@ def save(filename: str, data: Any) -> None:
 
 def get_store_path(path):
     """Get actual path to a Nix store path; supports handling local remotes"""
-    prefix = os.getenv("NIX_REMOTE", "/")
-    if not prefix.startswith("/"):
+    prefix = os.getenv("NIX_REMOTE")
+
+    if not prefix:
+        return path
+
+    prefix = Path(prefix)
+
+    if not prefix.is_absolute():
         raise Exception(f"Must be run on a local Nix store. Current Nix store: {prefix}")
 
-    # Needs to be relative or otherwise join will ignore all the paths before it (WTF?)
-    normalised_path = os.path.normpath(path).removeprefix('/')
-    if normalised_path == ".":
-        normalised_path = ""
-    return os.path.join(prefix, normalised_path)
+    path = Path(path).resolve()
+    remote_path = prefix.resolve().joinpath(path.relative_to(f"{path.drive}{path.root}"))
+
+    return str(remote_path)
 
 class GitCheckoutInfoDict(TypedDict):
     """Container for output from nix-prefetch-git"""
-    url: str
+    url: str 
     rev: str
     date: str
     path: str
