@@ -16,6 +16,8 @@ in
 
     nativeBuildInputs = (oldAttrs.nativeBuildInputs or []) ++ [ rsync  git ];
 
+    repo2nixPatches = ./patches;
+
     # NOTE: why `git apply` instead of relying  on `patches`? For some reason when
     #       using `patches` the source `rsync`ed into `var/repo` is missing those changes
     installPhase = ''
@@ -40,9 +42,7 @@ in
         git add -A
         git commit -m "Upstream sources"
 
-        git apply ${ ./00001-add-support-for-repo2nix.patch }
-        git add -A
-        git commit -m "Patch with repo2nix"
+        git am $repo2nixPatches/*.patch
 
         git log -n 1 --format="%H" > ../../COMMITED_REPO_REV
       )
@@ -64,7 +64,7 @@ in
     postFixup = ''
       wrapProgram "$out/bin/repo" \
         --set REPO_URL "file://$out/var/repo" \
-        --set REPO_REV "$(cat COMMITED_REPO_REV)" \
+        --set REPO_REV "$(cat ./COMMITED_REPO_REV)" \
         --prefix PATH ":" "${ lib.makeBinPath [ git gnupg less openssh ] }"
     '';
   })
