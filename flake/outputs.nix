@@ -5,6 +5,7 @@
   androidPkgs,
   flake-compat,
   treefmt-nix,
+  nix-github-actions,
   ...
 }@inputs:
 let
@@ -89,4 +90,6 @@ in
       '';
     };
   };
+
+  githubActions = nix-github-actions.lib.mkGithubMatrix { inherit (self) checks; };
 }
