@@ -72,6 +72,7 @@
       excludes = [
         "*.patch"
         "*.json"
+        ".direnv/**"
         "modules/apps/updater-sepolicy/**"
         "docs/**"
         "LICENSES/**"
@@ -96,6 +97,7 @@
         ruff-format.excludes = [ "apks/chromium/*" ];
 
         shellcheck.includes = lib.mkForce [
+          ".envrc"
           "flavors/**/*.sh"
           "modules/pixel/update.sh"
           "scripts/patchelf-prefix.sh"
