@@ -19,14 +19,13 @@
   curl,
   util-linux,
   perl,
-  python2,
   python3,
   libarchive,
   api ? 32,
-}:
+}@args:
 
 let
-  python = if api >= 30 then python3 else python2;
+  python = python3; # if api >= 30 then python3 else args.python2;
 
   dexrepair = callPackage ./dexrepair.nix { };
   apiStr = builtins.toString api;
@@ -92,17 +91,6 @@ in
 
   patches =
     {
-      "29" = [
-        ./10/0001-Disable-oatdump-update.patch
-        ./10/0002-Just-write-proprietary-blobs.txt-to-current-dir.patch
-        ./10/0003-Allow-for-externally-set-config-file.patch
-      ];
-      "30" = [
-        ./11/0001-Disable-oatdump-update.patch
-        ./11/0002-Just-write-proprietary-blobs.txt-to-current-dir.patch
-        ./11/0003-Allow-for-externally-set-config-file.patch
-        ./11/0004-Add-option-to-use-externally-provided-carrier_list.p.patch
-      ];
       "31" = [
         ./12/0001-Just-write-proprietary-blobs.txt-to-current-dir.patch
         ./12/0002-Allow-for-externally-set-config-file.patch

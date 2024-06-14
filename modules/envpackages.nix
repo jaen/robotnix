@@ -44,38 +44,5 @@ in
         # c.f. https://android.googlesource.com/device/generic/goldfish/+/605e6a14e44c99e87d48bf52507f8aa01633fb04
         python3
       ])
-      (mkIf ((config.androidVersion >= 10) && (config.androidVersion <= 11)) [
-        freetype # Needed by jdk9 prebuilt
-        fontconfig
-
-        python3
-        python2 # device/generic/goldfish/tools/mk_combined_img.py still needs py2 :(
-      ])
-      (mkIf (config.androidVersion <= 9) [
-        # stuff that was in the earlier buildenv. Not entirely sure everything here is necessary
-        (androidPkgs.sdk (
-          p: with p; [
-            cmdline-tools-latest
-            platform-tools
-          ]
-        ))
-        openssl.dev
-        bison
-        curl
-        flex
-        gcc
-        gitRepo
-        gnupg
-        gperf
-        imagemagick
-        libxml2
-        lzip
-        lzop
-        perl
-        python2
-        schedtool
-        util-linux
-        which
-      ])
     ]);
 }

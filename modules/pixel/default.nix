@@ -30,72 +30,7 @@ let
     in
     pkgs.fetchurl (lib.filterAttrs (n: v: (n == "url" || n == "sha256")) matchingItem);
 
-  deviceMap = {
-    marlin = {
-      family = "marlin";
-      name = "Pixel XL";
-    };
-    sailfish = {
-      family = "marlin";
-      name = "Pixel";
-    };
-    taimen = {
-      family = "taimen";
-      name = "Pixel 2 XL";
-    };
-    walleye = {
-      family = "muskie";
-      name = "Pixel 2";
-    };
-    crosshatch = {
-      family = "crosshatch";
-      name = "Pixel 3 XL";
-    };
-    blueline = {
-      family = "crosshatch";
-      name = "Pixel 3";
-    };
-    bonito = {
-      family = "bonito";
-      name = "Pixel 3a XL";
-    };
-    sargo = {
-      family = "bonito";
-      name = "Pixel 3a";
-    };
-    coral = {
-      family = "coral";
-      name = "Pixel 4 XL";
-    };
-    flame = {
-      family = "coral";
-      name = "Pixel 4";
-    };
-    sunfish = {
-      family = "sunfish";
-      name = "Pixel 4a";
-    };
-    bramble = {
-      family = "redfin";
-      name = "Pixel 4a (5G)";
-    };
-    redfin = {
-      family = "redfin";
-      name = "Pixel 5";
-    };
-    barbet = {
-      family = "barbet";
-      name = "Pixel 5a (5G)";
-    };
-    raven = {
-      family = "raviole";
-      name = "Pixel 6 Pro";
-    };
-    oriole = {
-      family = "raviole";
-      name = "Pixel 6";
-    };
-  };
+  deviceMap = import ./device-map.nix;
 
   # Make a uuid based on some string data
   uuidgen =
@@ -130,12 +65,15 @@ mkMerge [
       apv.ota = mkDefault (fetchItem otaList);
 
       # Exclude all devices by default
-      source.excludeGroups = mkDefault (lib.attrNames deviceMap);
+      source.excludeGroups = mkDefault (lib.attrNames deviceMap ++ lib.mapAttrsToList (name: device: device.family) deviceMap ++ [ "slider" ]);
       # But include names related to our device
-      source.includeGroups = mkDefault [
-        config.device
-        config.deviceFamily
-      ];
+      source.includeGroups = mkDefault (
+        [
+          config.device
+          config.deviceFamily
+        ]
+        ++ lib.optional (config.deviceFamily == "raviole") "slider"
+      );
 
       signing.avb.enable = mkDefault true;
     }

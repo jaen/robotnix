@@ -5,6 +5,8 @@ let
   unstablePkgs = nixpkgs-unstable.legacyPackages.x86_64-linux;
 in
 self: super: {
+  adevtool = super.callPackage ./adevtool { };
+
   android-emulator = super.callPackage ./android-emulator { };
 
   android-prepare-vendor = super.callPackage ./android-prepare-vendor { };

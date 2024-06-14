@@ -45,7 +45,7 @@ mkIf (config.flavor == "waydroid") {
   envPackages =
     with pkgs;
     mkBefore [
-      (python2.withPackages (p: with p; [ Mako ]))
+      # (python2.withPackages (p: with p; [ Mako ]))
       (python3.withPackages (p: with p; [ Mako ]))
     ];
 

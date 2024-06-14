@@ -20,10 +20,18 @@ let
       pytest
     ]
   );
+
+  # robotnixSystem evaluates a robotnix configuration
+  robotnixSystem = configuration: import ./../default.nix { inherit configuration pkgs; };
+
+  robotnixConfigurations = import ./configurations.nix { inherit robotnixSystem pkgs; };
 in
 {
-  # robotnixSystem evaluates a robotnix configuration
-  lib.robotnixSystem = configuration: import ./../default.nix { inherit configuration pkgs; };
+  inherit robotnixConfigurations;
+
+  lib = {
+    inherit robotnixSystem;
+  };
 
   defaultTemplate = {
     path = ./../template;
@@ -38,27 +46,32 @@ in
     gitRepo = pkgs.gitRepo;
   };
 
-  devShell.x86_64-linux = pkgs.mkShell {
-    name = "robotnix-scripts";
-    inputsFrom = [ treeFmt.config.build.devShell ];
-    nativeBuildInputs = with pkgs; [
-      pythonForUpdaterScripts
-      gitRepo
-      nix-prefetch-git
-      curl
-      pup
-      jq
-      wget
+  devShells.x86_64-linux =
+    {
+      default = pkgs.mkShell {
+        name = "robotnix-scripts";
+        inputsFrom = [ treeFmt.config.build.devShell ];
+        nativeBuildInputs = with pkgs; [
+          pythonForUpdaterScripts
+          gitRepo
+          nix-prefetch-git
+          curl
+          pup
+          jq
+          wget
 
-      # For chromium updater script
-      # python2
-      cipd
-      git
+          # For chromium updater script
+          cipd
+          git
 
-      cachix
-    ];
-    PYTHONPATH = ./../scripts;
-  };
+          cachix
+        ];
+        PYTHONPATH = ./../scripts;
+      };
+    }
+    // (pkgs.lib.mapAttrs (
+      _: robotnixSystem: robotnixSystem.config.build.debugShell
+    ) robotnixConfigurations);
 
   formatter.x86_64-linux = treeFmt.config.build.wrapper;
 

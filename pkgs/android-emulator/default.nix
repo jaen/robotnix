@@ -21,7 +21,7 @@
   unzip,
   alsa-lib,
   libuuid,
-  xlibs,
+  # xlibs,
   dbus,
   xkeyboard_config,
   xorg,

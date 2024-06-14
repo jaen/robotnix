@@ -42,16 +42,10 @@ let
         ./flavors/grapheneos/kernel.nix
         ./flavors/lineageos
         ./flavors/vanilla
-        ./flavors/vanilla/10
-        ./flavors/vanilla/11
-        ./flavors/vanilla/11/kernel
         ./flavors/vanilla/12
         ./flavors/waydroid
-        ./modules/10
-        ./modules/11
         ./modules/12
         ./modules/13
-        ./modules/9
         ./modules/apps/auditor.nix
         ./modules/apps/chromium.nix
         ./modules/apps/fdroid.nix
@@ -59,8 +53,9 @@ let
         ./modules/apps/seedvault.nix
         ./modules/apps/updater.nix
         ./modules/apv
+        ./modules/adevtool
         ./modules/assertions.nix
-        ./modules/base.nix
+        ./modules/base
         ./modules/emulator.nix
         ./modules/envpackages.nix
         ./modules/etc.nix

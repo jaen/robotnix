@@ -5,6 +5,7 @@
   config,
   pkgs,
   lib,
+  robotnixlib,
   ...
 }:
 
@@ -19,230 +20,12 @@ let
     types
     ;
 
+  inherit (robotnixlib) formatSecondsSinceEpoch;
+
   fakeuser = pkgs.callPackage ./fakeuser { };
-
-  # Taken from https://github.com/edolstra/flake-compat/
-  # Format number of seconds in the Unix epoch as %Y%m%d%H
-  formatSecondsSinceEpoch =
-    t:
-    let
-      rem = x: y: x - x / y * y;
-      days = t / 86400;
-      secondsInDay = rem t 86400;
-      hours = secondsInDay / 3600;
-      minutes = (rem secondsInDay 3600) / 60;
-      seconds = rem t 60;
-
-      # Courtesy of https://stackoverflow.com/a/32158604.
-      z = days + 719468;
-      era = (if z >= 0 then z else z - 146096) / 146097;
-      doe = z - era * 146097;
-      yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
-      y = yoe + era * 400;
-      doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-      mp = (5 * doy + 2) / 153;
-      d = doy - (153 * mp + 2) / 5 + 1;
-      m = mp + (if mp < 10 then 3 else -9);
-      y' = y + (if m <= 2 then 1 else 0);
-
-      pad = s: if builtins.stringLength s < 2 then "0" + s else s;
-    in
-    "${toString y'}${pad (toString m)}${pad (toString d)}${pad (toString hours)}";
 in
 {
-  options = {
-    flavor = mkOption {
-      default = null;
-      type = types.nullOr types.str;
-      description = ''
-        Set to one of robotnix's supported flavors.
-        Current options are `vanilla`, `grapheneos`, and `lineageos`.
-      '';
-      example = "vanilla";
-    };
-
-    device = mkOption {
-      default = null;
-      type = types.nullOr types.str;
-      description = "Code name of device build target";
-      example = "marlin";
-    };
-
-    deviceDisplayName = mkOption {
-      default = null;
-      type = types.nullOr types.str;
-      description = "Display name of device build target";
-      example = "Pixel XL";
-    };
-
-    deviceFamily = mkOption {
-      default = null;
-      type = types.nullOr types.str;
-      internal = true;
-    };
-
-    arch = mkOption {
-      default = "arm64";
-      type = types.enum [
-        "arm64"
-        "arm"
-        "x86_64"
-        "x86"
-      ];
-      description = "Architecture of phone, usually set automatically by device";
-    };
-
-    variant = mkOption {
-      default = "user";
-      type = types.enum [
-        "user"
-        "userdebug"
-        "eng"
-      ];
-      description = ''
-        `user` has limited access and is suited for production.
-        `userdebug` is like user but with root access and debug capability.
-        `eng` is the development configuration with additional debugging tools.
-      '';
-    };
-
-    productName = mkOption {
-      type = types.str;
-      description = "Product name for choosecombo/lunch";
-      defaultText = "\${productNamePrefix}\${device}";
-      example = "aosp_crosshatch";
-    };
-
-    productNamePrefix = mkOption {
-      default = "aosp_";
-      type = types.str;
-      description = "Prefix for product name used with choosecombo/lunch";
-    };
-
-    buildType = mkOption {
-      default = "release";
-      type = types.enum [
-        "release"
-        "debug"
-      ];
-      description = "one of \"release\", \"debug\"";
-    };
-
-    buildNumber = mkOption {
-      type = types.str;
-      description = ''
-        Set this to something meaningful to identify the build.
-        Defaults to `YYYYMMDDHH` based on `buildDateTime`.
-        Should be unique for each build for disambiguation.
-      '';
-      example = "201908121";
-    };
-
-    buildDateTime = mkOption {
-      type = types.int;
-      description = ''
-        Unix time (seconds since the epoch) that this build is taking place.
-        Needs to be monotonically increasing for each build if you use the over-the-air (OTA) update mechanism.
-        e.g. output of `date +%s`
-      '';
-      example = 1565645583;
-      default =
-        with lib;
-        foldl' max 1 (mapAttrsToList (n: v: if v.enable then v.dateTime else 1) config.source.dirs);
-      defaultText = "*maximum of source.dirs.<name>.dateTime*";
-    };
-
-    androidVersion = mkOption {
-      default = 12;
-      type = types.int;
-      description = "Used to select which Android version to use";
-    };
-
-    flavorVersion = mkOption {
-      type = types.str;
-      internal = true;
-      description = "Version used by this flavor of Android";
-    };
-
-    apiLevel = mkOption {
-      type = types.int;
-      internal = true;
-      readOnly = true;
-    };
-
-    # TODO: extract system/product/vendor options into a submodule
-    system.additionalProductPackages = mkOption {
-      default = [ ];
-      type = types.listOf types.str;
-      description = "`PRODUCT_PACKAGES` to add under `system` partition.";
-    };
-
-    product.additionalProductPackages = mkOption {
-      default = [ ];
-      type = types.listOf types.str;
-      description = "`PRODUCT_PACKAGES` to add under `product` partition.";
-    };
-
-    vendor.additionalProductPackages = mkOption {
-      default = [ ];
-      type = types.listOf types.str;
-      description = "`PRODUCT_PACKAGES` to add under `vendor` partition.";
-    };
-
-    removedProductPackages = mkOption {
-      default = [ ];
-      type = types.listOf types.str;
-      description = "`PRODUCT_PACKAGES` to remove from build";
-    };
-
-    system.extraConfig = mkOption {
-      default = "";
-      type = types.lines;
-      description = "Additional configuration to be included in system .mk file";
-      internal = true;
-    };
-
-    product.extraConfig = mkOption {
-      default = "";
-      type = types.lines;
-      description = "Additional configuration to be included in product .mk file";
-      internal = true;
-    };
-
-    vendor.extraConfig = mkOption {
-      default = "";
-      type = types.lines;
-      description = "Additional configuration to be included in vendor .mk file";
-      internal = true;
-    };
-
-    ccache.enable = mkEnableOption "ccache";
-
-    envPackages = mkOption {
-      type = types.listOf types.package;
-      internal = true;
-      default = [ ];
-    };
-
-    envVars = mkOption {
-      type = types.attrsOf types.str;
-      internal = true;
-      default = { };
-    };
-
-    useReproducibilityFixes = mkOption {
-      type = types.bool;
-      default = true;
-      description = "Apply additional fixes for reproducibility";
-    };
-
-    # Random attrset to throw build products into
-    build = mkOption {
-      internal = true;
-      default = { };
-      type = types.attrs;
-    };
-  };
+  options = import ./options.nix { inherit lib; };
 
   config = mkMerge [
     (mkIf
@@ -261,13 +44,6 @@ in
     {
       apiLevel =
         {
-          # TODO: If we start building older androids and need the distinction
-          # between 7 and 7.1, we should probably switch to a string androidVersion
-          "7" = 25; # Assuming 7.1
-          "8" = 27; # Assuming 8.1
-          "9" = 28;
-          "10" = 29;
-          "11" = 30;
           "12" = 32;
           "13" = 33;
         }
@@ -282,9 +58,11 @@ in
       system.extraConfig = lib.concatMapStringsSep "\n" (
         name: "PRODUCT_PACKAGES += ${name}"
       ) config.system.additionalProductPackages;
+
       product.extraConfig = lib.concatMapStringsSep "\n" (
         name: "PRODUCT_PACKAGES += ${name}"
       ) config.product.additionalProductPackages;
+
       vendor.extraConfig = lib.concatMapStringsSep "\n" (
         name: "PRODUCT_PACKAGES += ${name}"
       ) config.vendor.additionalProductPackages;
@@ -340,6 +118,23 @@ in
           cp ${vendorMk} $out/vendor.mk
         '';
 
+      # A hack to make sure the out directory remains writeable after copying files/directories from /nix/store mounted sources
+      source.dirs."prebuilts/build-tools".postPatch = mkIf (config.androidVersion >= 10) (
+        let
+          patchedCp = pkgs.substituteAll {
+            src = ./fix-permissions.sh;
+            inherit (pkgs) bash;
+          };
+        in
+        ''
+          pushd path/linux-x86
+          mv cp .cp-wrapped
+          cp ${patchedCp} cp
+          chmod +x cp
+          popd
+        ''
+      );
+
       envVars = mkMerge [
         {
           BUILD_NUMBER = config.buildNumber;
@@ -361,90 +156,113 @@ in
       ];
 
       build = rec {
-        mkAndroid =
+        postRaviole = lib.elem config.deviceFamily [ "raviole" "bluejay" "pantah" ];
+        postPantah = lib.elem config.deviceFamily [ "pantah" ];
+        androidBuilderToolkit =
+          let
+            requiredNativeBuildInputs = [ config.build.env fakeuser pkgs.util-linux ];
+            builder = pkgs.writeShellScript "builder.sh" ''
+              export SAVED_UID=$(${pkgs.coreutils}/bin/id -u)
+              export SAVED_GID=$(${pkgs.coreutils}/bin/id -g)
+              # Become a fake "root" in a new namespace so we can bind mount sources
+              ${pkgs.toybox}/bin/cat << 'EOF' | ${pkgs.util-linux}/bin/unshare -m -r ${pkgs.runtimeShell}
+              source $stdenv/setup
+              genericBuild
+              EOF
+            '';
+          in
           {
-            name,
-            makeTargets,
-            installPhase,
-            outputs ? [ "out" ],
-            ninjaArgs ? "",
-          }:
-          # Use NoCC here so we don't get extra environment variables that might conflict with AOSP build stuff. Like CC, NM, etc.
-          pkgs.stdenvNoCC.mkDerivation (
-            {
-              inherit name;
+            inherit requiredNativeBuildInputs builder;
+            # pass this to stdenv.mkDerivation to get the unpacked source for builds.
+            flags = {
+              inherit builder;
               srcs = [ ];
 
-              # TODO: update in the future, might not be required.
-              # gets permissed denied if not set, in some of our deps
-              dontUpdateAutotoolsGnuConfigScripts = true;
+              nativeBuildInputs = requiredNativeBuildInputs;
 
-              # TODO: Clean this stuff up. unshare / robotnix-build could probably be combined into a single utility.
-              builder = pkgs.writeShellScript "builder.sh" ''
-                export SAVED_UID=$(${pkgs.coreutils}/bin/id -u)
-                export SAVED_GID=$(${pkgs.coreutils}/bin/id -g)
-
-                # Become a fake "root" in a new namespace so we can bind mount sources
-                ${pkgs.toybox}/bin/cat << 'EOF' | ${pkgs.util-linux}/bin/unshare -m -r ${pkgs.runtimeShell}
-                set -euo pipefail
-                source $stdenv/setup
-                genericBuild
-                EOF
-              '';
-
-              inherit outputs;
-
-              requiredSystemFeatures = [ "big-parallel" ];
-
-              nativeBuildInputs = [
-                config.build.env
-                fakeuser
-              ];
-
-              unpackPhase = ''
+              unpackPhase = pkgs.writeShellScript "android-source-unpack.sh" ''
                 export rootDir=$PWD
                 source ${config.build.unpackScript}
               '';
+            };
 
-              dontConfigure = true;
+            enterUserEnv = name: buildPhase: pkgs.writeShellScript "enter-user-env-for-${name}.sh" ''
+              # Become the original user--not fake root.
+              set -e -o pipefail
+              ${pkgs.toybox}/bin/cat << 'EOF2' | fakeuser $SAVED_UID $SAVED_GID robotnix-build
+              ${buildPhase}
+              EOF2
+              exit ''${PIPESTATUS[1]}
+            '';
 
-              # This was originally in the buildPhase, but building the sdk / atree would complain for unknown reasons when it was set
-              # export OUT_DIR=$rootDir/out
-              buildPhase = ''
-                # Become the original user--not fake root.
-                ${pkgs.toybox}/bin/cat << 'EOF2' | fakeuser $SAVED_UID $SAVED_GID robotnix-build
-                set -e -o pipefail
+            buildPhase = { ninjaArgs ? "", makeTargets }: ''
+              source build/envsetup.sh
+              choosecombo ${config.buildType} ${config.productName} ${config.variant}
 
-                ${lib.optionalString (config.androidVersion >= 6 && config.androidVersion <= 8) ''
-                  # Needed for the jack compilation server
-                  # https://source.android.com/setup/build/jack
-                  mkdir -p $HOME
-                  export USER=foo
-                ''}
-                source build/envsetup.sh
-                choosecombo ${config.buildType} ${config.productName} ${config.variant}
+              # Fail early if the product was not selected properly
+              test -n "$TARGET_PRODUCT" || exit 1
+              CORES=''${NIX_BUILD_CORES:-$(${pkgs.coreutils}/bin/nproc)}
+              export NINJA_ARGS="-j$CORES ${toString ninjaArgs} -v -d explain"
+              ${lib.optionalString (config.androidVersion >= 13)''
+              # needed for fontconfig
+              export XDG_CACHE_HOME=$(pwd)
+              export FONTCONFIG_PATH=$(get_build_var PRODUCT_OUT)/obj/ETC/fonts.xml_intermediates/
+              export FONTCONFIG_FILE=fonts.xml
+              ''}
+              m ${toString makeTargets} | cat
+              exit_code=''${PIPESTATUS[0]}
+              # the android 13 build doesn't seem to set this var
+              if [[ -z "$ANDROID_PRODUCT_OUT" ]]; then
+                ANDROID_PRODUCT_OUT="$(get_build_var PRODUCT_OUT)"
+              fi
+              echo $ANDROID_PRODUCT_OUT > ANDROID_PRODUCT_OUT
+              exit $exit_code
+            '';
+          };
 
-                # Fail early if the product was not selected properly
-                test -n "$TARGET_PRODUCT" || exit 1
+        mkAndroid =
+          { name
+          , makeTargets ? [ ]
+          , installPhase
+          , buildPhase ? androidBuilderToolkit.buildPhase { inherit makeTargets ninjaArgs; }
+          , nativeBuildInputs ? [ ]
+          , outputs ? [ "out" ]
+          , ninjaArgs ? ""
+          , ...
+          }@inputs:
+          # Use NoCC here so we don't get extra environment variables that might conflict with AOSP build stuff. Like CC, NM, etc.
+          pkgs.stdenvNoCC.mkDerivation (androidBuilderToolkit.flags // (inputs // {
+            # TODO: update in the future, might not be required.
+            # gets permissed denied if not set, in some of our deps
+            dontUpdateAutotoolsGnuConfigScripts = true;
 
-                export NINJA_ARGS="-j$NIX_BUILD_CORES ${toString ninjaArgs}"
-                m ${toString makeTargets} | cat
-                echo $ANDROID_PRODUCT_OUT > ANDROID_PRODUCT_OUT
+            nativeBuildInputs = androidBuilderToolkit.requiredNativeBuildInputs ++ nativeBuildInputs;
+            # TODO: Clean this stuff up. unshare / robotnix-build could probably be combined into a single utility.
+            requiredSystemFeatures = [ "big-parallel" ];
 
-                EOF2
-              '';
+            dontConfigure = true;
+            # This was originally in the buildPhase, but building the sdk / atree would complain for unknown reasons when it was set
+            # export OUT_DIR=$rootDir/out
+            buildPhase = androidBuilderToolkit.enterUserEnv "mkAndroid-${name}" ''
+              ${buildPhase}
+            '';
 
-              installPhase =
-                ''
-                  export ANDROID_PRODUCT_OUT=$(cat ANDROID_PRODUCT_OUT)
-                ''
-                + installPhase;
+            preInstall = ''
+              if [ -f ANDROID_PRODUCT_OUT ]; then
+                export ANDROID_PRODUCT_OUT=$(cat ANDROID_PRODUCT_OUT)
+              fi
+            '' + (inputs.preInstall or "");
 
-              dontFixup = true;
-              dontMoveLib64 = true;
-            }
-            // config.envVars
-          );
+            installPhase = ''
+              set -e -o pipefail
+              runHook preInstall
+              ${installPhase}
+              runHook postInstall
+            '';
+
+            dontFixup = true;
+            dontMoveLib64 = true;
+          }) // config.envVars);
 
         android = mkAndroid {
           name = "robotnix-${config.productName}-${config.buildNumber}";
@@ -558,7 +376,7 @@ in
               ''
                 for file in bin/*; do
                   isELF "$file" || continue
-                  bash ${../scripts/patchelf-prefix.sh} "$file" "${pkgs.stdenv.cc.bintools.dynamicLinker}" || continue
+                  bash ${../../scripts/patchelf-prefix.sh} "$file" "${pkgs.stdenv.cc.bintools.dynamicLinker}" || continue
                 done
               ''
               + ''
@@ -583,20 +401,56 @@ in
         # TODO: Better way than creating all these scripts and feeding with init-file?
         #        debugUnpackScript = config.build.debugUnpackScript;
         #        debugPatchScript = config.build.debugPatchScript;
-        debugEnterEnv = pkgs.writeShellScript "debug-enter-env.sh" ''
-          export SAVED_UID=$(${pkgs.coreutils}/bin/id -u)
-          export SAVED_GID=$(${pkgs.coreutils}/bin/id -g)
-          ${pkgs.util-linux}/bin/unshare -m -r ${pkgs.writeShellScript "debug-enter-env2.sh" ''
-            export rootDir=$PWD
-            source ${config.build.unpackScript}
-            ${lib.concatStringsSep "\n" (
-              lib.mapAttrsToList (name: value: "export ${name}=${value}") config.envVars
-            )}
-
-            # Become the original user--not fake root. Enter an FHS user namespace
-            ${fakeuser}/bin/fakeuser $SAVED_UID $SAVED_GID ${config.build.env}/bin/robotnix-build
-          ''}
+        debugBuildScript = pkgs.writeShellScript "debug-build.sh" ''
+          ${lib.replaceStrings [ " | cat" ] [ "" ] (
+            config.build.androidBuilderToolkit.buildPhase { makeTargets = config.build.android.makeTargets; }
+          )}
         '';
+
+        unsharedDebugEnterEnv = pkgs.writeShellScript "debug-enter-env2.sh" ''
+          export rootDir=$PWD
+          export PATH=${config.build.env}/bin/:$PATH
+          source ${config.build.unpackScript}
+          # ''${config.build.adevtool.patchPhase}
+          ${lib.concatStringsSep "\n" (
+            lib.mapAttrsToList (name: value: "export ${name}=${value}") config.envVars
+          )}
+          # Become the original user--not fake root. Enter an FHS user namespace
+          ${fakeuser}/bin/fakeuser $SAVED_UID $SAVED_GID ${config.build.env}/bin/robotnix-build
+        '';
+
+        debugEnterEnv = pkgs.writeShellScript "debug-enter-env.sh" ''
+          export SAVED_UID=$(${pkgs.coreutils}/bin/id -u) SAVED_GID=$(${pkgs.coreutils}/bin/id -g)
+          ${pkgs.util-linux}/bin/unshare -m -r ${unsharedDebugEnterEnv}
+        '';
+
+        debugShell = config.build.mkAndroid {
+          name = "${config.device}-debug-shell";
+          outputs = [ "out" ];
+          unpackPhase = "true";
+          buildPhase = "true";
+          installPhase = ''
+            mkdir -p $out/bin
+            ln -s ${debugEnterEnv} $out/bin/debug-enter-env.sh
+            ln -s ${unsharedDebugEnterEnv} $out/bin/unshared-debug-enter-env.sh
+            ln -s ${debugBuildScript} $out/bin/debug-build.sh
+          '';
+        };
+
+        # debugEnterEnv = pkgs.writeShellScript "debug-enter-env.sh" ''
+        #   export SAVED_UID=$(${pkgs.coreutils}/bin/id -u)
+        #   export SAVED_GID=$(${pkgs.coreutils}/bin/id -g)
+        #   ${pkgs.util-linux}/bin/unshare -m -r ${pkgs.writeShellScript "debug-enter-env2.sh" ''
+        #     export rootDir=$PWD
+        #     source ${config.build.unpackScript}
+        #     ${lib.concatStringsSep "\n" (
+        #       lib.mapAttrsToList (name: value: "export ${name}=${value}") config.envVars
+        #     )}
+        #
+        #     # Become the original user--not fake root. Enter an FHS user namespace
+        #     ${fakeuser}/bin/fakeuser $SAVED_UID $SAVED_GID ${config.build.env}/bin/robotnix-build
+        #   ''}
+        # '';
 
         env =
           let

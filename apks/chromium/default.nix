@@ -16,7 +16,6 @@
   buildFHSUserEnv,
   autoPatchelfHook,
   buildPackages,
-  python2,
   python3,
   ninja,
   llvmPackages_11,
@@ -249,12 +248,6 @@ stdenvNoCC.mkDerivation rec {
     # Including some of the stuff from src/.vpython as well
     [
       bsdiff
-      (python2.withPackages (
-        p: with p; [
-          ply
-          setuptools
-        ]
-      ))
       (python3.withPackages (
         p: with p; [
           ply
@@ -371,13 +364,13 @@ stdenvNoCC.mkDerivation rec {
       )
     '';
 
-  configurePhase = ''
-    # attept to fix python2 failing with "EOFError: EOF read where object expected" on multi-core builders
-    export PYTHONDONTWRITEBYTECODE=true
-    ( cd src
-      gn gen ${lib.escapeShellArg "--args=${gnToString gnFlags}"} out/Release
-    )
-  '';
+  # configurePhase = ''
+  #   # attept to fix python2 failing with "EOFError: EOF read where object expected" on multi-core builders
+  #   export PYTHONDONTWRITEBYTECODE=true
+  #   ( cd src
+  #     gn gen ${lib.escapeShellArg "--args=${gnToString gnFlags}"} out/Release
+  #   )
+  # '';
 
   # Hack: Use an FHS env. vendored android sdk/ndk and clang toolchain use it
   # https://chromium.googlesource.com/chromium/src/+/master/docs/android_build_instructions.md

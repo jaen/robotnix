@@ -77,8 +77,8 @@
         "docs/**"
         "LICENSES/**"
         # trivial and possibly replaceable with another `unshare` call nowadays
-        "modules/fakeuser/fakeuser.c"
-        "modules/fakeuser/meson.build"
+        "modules/base/fakeuser/fakeuser.c"
+        "modules/base/fakeuser/meson.build"
         # mirror of nixpkgs upstream
         "pkgs/fetchgit/nix-prefetch-git"
         "flavors/lineageos/lastUpdated.epoch"

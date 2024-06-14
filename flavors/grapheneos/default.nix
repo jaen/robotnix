@@ -23,17 +23,35 @@ let
   grapheneOSRelease = "${config.apv.buildID}.${upstreamParams.buildNumber}";
 
   phoneDeviceFamilies = [
-    "crosshatch"
-    "bonito"
-    "coral"
-    "sunfish"
-    "redfin"
-    "barbet"
+    "raviole"
+    "bluejay"
+    "pantah"
   ];
   supportedDeviceFamilies = phoneDeviceFamilies ++ [ "generic" ];
+
+  kernelPrefix = "kernel/google";
+
+  kernelRepoName = {
+    "oriole" = "raviole";
+    "raven" = "raviole";
+    "bluejay" = "bluejay";
+    "panther" = "pantah";
+    "cheetah" = "pantah";
+  }.${config.device} or config.deviceFamily;
+  kernelSourceRelpath = "${kernelPrefix}/${kernelRepoName}";
+  kernelSources = lib.mapAttrs'
+    (path: src: {
+      name = "${kernelSourceRelpath}/${path}";
+      value = src // {
+        enable = false;
+      };
+    })
+    (lib.importJSON (./kernel-repos/repo- + "${kernelRepoName}-${grapheneOSRelease}.json"));
 in
 mkIf (config.flavor == "grapheneos") (mkMerge [
   {
+    androidVersion = mkDefault 13;
+
     buildNumber = mkDefault upstreamParams.buildNumber;
     buildDateTime = mkDefault upstreamParams.buildDateTime;
 
@@ -45,20 +63,14 @@ mkIf (config.flavor == "grapheneos") (mkMerge [
       BUILD_HOSTNAME = "grapheneos";
     };
 
-    source.dirs = lib.importJSON (./. + "/repo-${grapheneOSRelease}.json");
+    source.dirs = (lib.importJSON (./. + "/repo-${grapheneOSRelease}.json") // kernelSources);
 
-    apv.enable = mkIf (elem config.deviceFamily phoneDeviceFamilies) (mkDefault true);
-    apv.buildID = mkDefault (
-      if
-        (elem config.device [
-          "crosshatch"
-          "blueline"
-        ])
-      then
-        "SP1A.210812.016.C1"
-      else
-        "SP2A.220405.003"
-    );
+    # TODO: re-add the legacy devices
+    apv.enable = mkIf (config.androidVersion <= 12 && elem config.deviceFamily phoneDeviceFamilies) (mkDefault true);
+    apv.buildID = mkDefault "TQ2A.230505.002";
+
+    adevtool.enable = mkIf (config.androidVersion >= 13 && elem config.deviceFamily phoneDeviceFamilies) (mkDefault true);
+    adevtool.buildID = config.apv.buildID;
 
     # Not strictly necessary for me to set these, since I override the source.dirs above
     source.manifest.url = mkDefault "https://github.com/GrapheneOS/platform_manifest.git";
@@ -69,8 +81,8 @@ mkIf (config.flavor == "grapheneos") (mkMerge [
         (config.device != null) && !(elem config.deviceFamily supportedDeviceFamilies)
       ) "${config.device} is not a supported device for GrapheneOS")
       ++ (optional (
-        !(elem config.androidVersion [ 12 ])
-      ) "Unsupported androidVersion (!= 12) for GrapheneOS")
+        !(elem config.androidVersion [ 13 ])
+      ) "Unsupported androidVersion (!= 13) for GrapheneOS")
       ++ (optional (config.deviceFamily == "crosshatch")
         "crosshatch/blueline are considered legacy devices and receive only extended support updates from GrapheneOS and no longer receive vendor updates from Google"
       );
@@ -98,14 +110,16 @@ mkIf (config.flavor == "grapheneos") (mkMerge [
     ];
 
     # No need to include kernel sources in Android source trees since we build separately
-    source.dirs."kernel/google/marlin".enable = false;
-    source.dirs."kernel/google/wahoo".enable = false;
-    source.dirs."kernel/google/crosshatch".enable = false;
-    source.dirs."kernel/google/bonito".enable = false;
-    source.dirs."kernel/google/coral".enable = false;
-    source.dirs."kernel/google/sunfish".enable = false;
-    source.dirs."kernel/google/redbull".enable = false;
-    source.dirs."kernel/google/barbet".enable = false;
+    source.dirs."${kernelPrefix}/marlin".enable = false;
+    source.dirs."${kernelPrefix}/wahoo".enable = false;
+    source.dirs."${kernelPrefix}/crosshatch".enable = false;
+    source.dirs."${kernelPrefix}/bonito".enable = false;
+    source.dirs."${kernelPrefix}/coral".enable = false;
+    source.dirs."${kernelPrefix}/sunfish".enable = false;
+    source.dirs."${kernelPrefix}/redbull".enable = false;
+    source.dirs."${kernelPrefix}/barbet".enable = false;
+    source.dirs."${kernelPrefix}/raviole".enable = false;
+    source.dirs."${kernelPrefix}/bluejay".enable = false;
 
     kernel.enable = mkDefault (elem config.deviceFamily phoneDeviceFamilies);
 
